@@ -11,7 +11,17 @@ A modern portfolio website featuring multiple web applications built with Next.j
 - **GSAP Demo** - Animation showcase and demos
 - **AI Chatbot** - Interactive chatbot interface
 - **D3.js Demo** - Data visualization examples
+- **Games Hub** - Collection of interactive card games
 - **Real-time Collaboration** - WebSocket-powered collaborative features
+
+## 🎮 Games Collection
+
+- **Higher/Lower** - Guess if the next card is higher or lower
+- **Blackjack** - Classic 21 card game with proper Ace handling
+- **War** - Card battle game with WAR scenarios
+- **Memory Match** - Card matching game with multiple difficulty levels
+- **Deck Manager** - Advanced deck and pile management utility
+- **Card Flick** - Physics-based card flicking game with momentum controls
 
 ## 🛠️ Tech Stack
 
@@ -22,13 +32,14 @@ A modern portfolio website featuring multiple web applications built with Next.j
 - **State Management:** Zustand
 - **Real-time:** WebSockets
 - **Data Visualization:** D3.js
+- **Card API:** Deck of Cards API
 
 ## 📦 Installation
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/yourusername/nextjs-portfolio.git
-cd nextjs-portfolio
+git clone https://github.com/zim/my-app-tailwind.git
+cd my-app-tailwind
 ```
 
 2. Install dependencies:
@@ -73,6 +84,13 @@ This project is optimized for deployment on Vercel:
 
 ## 📱 Applications
 
+### Games Hub
+- **Card Games Collection** - 6 different card games with real card data
+- **Physics Engine** - GSAP-powered realistic card animations
+- **AI Opponents** - Smart computer players with varying difficulty
+- **Statistics Tracking** - Personal bests, win rates, and achievements
+- **Responsive Design** - Optimized for desktop and mobile play
+
 ### Todo Lists
 - Create and manage multiple todo lists
 - Real-time collaboration features
@@ -90,6 +108,27 @@ This project is optimized for deployment on Vercel:
 - Print-friendly design
 - Responsive design
 - Downloadable PDF
+
+## 🎯 Game Features
+
+### Card Flick
+- **Physics-based Gameplay** - Realistic momentum and trajectory
+- **Drag-and-Release Controls** - Intuitive flicking mechanics
+- **AI Opponent** - Computer player with 70-95% accuracy
+- **Tournament Mode** - 5-round competitions
+- **Perfect Shot Recognition** - Special achievements for precision
+
+### Blackjack
+- **Authentic Rules** - Proper Ace handling and game logic
+- **Card Counting** - Track cards for strategic play
+- **Betting System** - Manage your chip stack
+- **Split & Double Down** - Advanced gameplay options
+
+### Memory Match
+- **Multiple Difficulties** - Easy (8), Medium (16), Hard (24) cards
+- **Timer Challenges** - Race against the clock
+- **Move Tracking** - Optimize your efficiency
+- **Progressive Difficulty** - Unlock harder levels
 
 ## 🔧 Development
 
@@ -117,8 +156,8 @@ This project is open source and available under the [MIT License](LICENSE).
 ## 👨‍💻 Author
 
 **Jolyon Segal**
-- Portfolio: [Your Portfolio URL]
-- GitHub: [@yourusername](https://github.com/yourusername)
+- Portfolio: [Jolyon Segal - Web Developer](https://your-portfolio-domain.com)
+- GitHub: [@zim](https://github.com/zim)
 
 ## 🤝 Contributing
 
