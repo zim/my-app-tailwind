@@ -57,7 +57,7 @@ function TodosContent() {
   // Don't render content until hydrated to prevent hydration mismatch
   if (!isHydrated) {
     return (
-      <div className="min-h-screen bg-gray-50 py-8">
+      <div className="min-h-screen bg-slate-300 py-8">
         <div className="max-w-6xl mx-auto px-4">
           <div className="flex items-center justify-between mb-8">
             <h1 className="text-4xl font-bold text-gray-800">
@@ -86,13 +86,42 @@ function TodosContent() {
   const recentLists = getRecentLists();
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen bg-slate-300 py-8">
       <div className="max-w-6xl mx-auto px-4">
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
-          <h1 className="text-4xl font-bold text-gray-800">
-            Todo Lists
-          </h1>
+          <div className="flex items-center gap-8">
+            <h1 className="text-4xl font-bold text-gray-800">
+              Todo Lists
+            </h1>
+            {/* Stats overview - inline with title */}
+            {todoLists.length > 0 && (
+              <div className="flex items-center gap-6 text-sm text-gray-600">
+                <span className="flex items-center gap-2">
+                  <span className="text-gray-500">Lists:</span>
+                  <span className="font-medium text-blue-600">{todoLists.length}</span>
+                </span>
+                <span className="flex items-center gap-2">
+                  <span className="text-gray-500">Total:</span>
+                  <span className="font-medium text-green-600">
+                    {todoLists.reduce((sum, list) => sum + getTotalTodos(list.id), 0)}
+                  </span>
+                </span>
+                <span className="flex items-center gap-2">
+                  <span className="text-gray-500">Active:</span>
+                  <span className="font-medium text-orange-600">
+                    {todoLists.reduce((sum, list) => sum + getActiveTodos(list.id), 0)}
+                  </span>
+                </span>
+                <span className="flex items-center gap-2">
+                  <span className="text-gray-500">Done:</span>
+                  <span className="font-medium text-gray-700">
+                    {todoLists.reduce((sum, list) => sum + getCompletedTodos(list.id), 0)}
+                  </span>
+                </span>
+              </div>
+            )}
+          </div>
           <div className="flex gap-2">
             <button
               onClick={() => setShowForm(true)}
@@ -223,27 +252,7 @@ function TodosContent() {
           </div>
         </Modal>
 
-        {/* Stats overview */}
-        {todoLists.length > 0 && (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-            <div className="bg-white rounded-lg shadow-md p-4">
-              <h3 className="text-lg font-semibold text-gray-800">Total Lists</h3>
-              <p className="text-2xl font-bold text-blue-600">{todoLists.length}</p>
-            </div>
-            <div className="bg-white rounded-lg shadow-md p-4">
-              <h3 className="text-lg font-semibold text-gray-800">Total Todos</h3>
-              <p className="text-2xl font-bold text-green-600">
-                {todoLists.reduce((sum, list) => sum + getTotalTodos(list.id), 0)}
-              </p>
-            </div>
-            <div className="bg-white rounded-lg shadow-md p-4">
-              <h3 className="text-lg font-semibold text-gray-800">Active Todos</h3>
-              <p className="text-2xl font-bold text-orange-600">
-                {todoLists.reduce((sum, list) => sum + getActiveTodos(list.id), 0)}
-              </p>
-            </div>
-          </div>
-        )}
+
 
         {/* Recent lists section */}
         {recentLists.length > 0 && !searchText && (
@@ -274,7 +283,7 @@ function TodosContent() {
                         key={list.id}
                         href={`/todos/list/${list.id}`}
                         onClick={() => handleOpenList(list.id)}
-                        className="bg-white rounded-lg shadow-md p-4 border-l-4 hover:shadow-lg hover:bg-gray-50 transition-all cursor-pointer block"
+                        className="bg-white rounded-lg shadow-md p-4 border-l-4 hover:shadow-xl hover:bg-gray-50 hover:scale-105 transition-all duration-300 cursor-pointer block"
                         style={{ borderLeftColor: list.color }}
                       >
                         <div className="flex justify-between items-start mb-2">
@@ -315,7 +324,7 @@ function TodosContent() {
                           key={list.id}
                           href={`/todos/list/${list.id}`}
                           onClick={() => handleOpenList(list.id)}
-                          className="p-4 hover:bg-gray-50 transition-colors border-l-4 block cursor-pointer"
+                          className="p-4 hover:bg-gray-50 hover:shadow-lg hover:scale-[1.02] transition-all duration-300 border-l-4 block cursor-pointer"
                           style={{ borderLeftColor: list.color }}
                         >
                           <div className="flex items-center justify-between">
@@ -369,13 +378,13 @@ function TodosContent() {
         )}
 
         {/* All todo lists */}
-        <div>
+        <div className="bg-white rounded-lg shadow-md p-6">
           <h2 className="text-2xl font-semibold text-gray-800 mb-4">
             {searchText ? 'Search Results' : 'All Todo Lists'}
           </h2>
 
           {filteredLists.length === 0 ? (
-            <div className="bg-white rounded-lg shadow-md p-8 text-center">
+            <div className="bg-gray-50 rounded-lg p-8 text-center">
               <div className="text-gray-500">
                 {searchText ? (
                   <p>No todo lists match your search.</p>
@@ -399,7 +408,7 @@ function TodosContent() {
                   key={list.id}
                   href={`/todos/list/${list.id}`}
                   onClick={() => handleOpenList(list.id)}
-                  className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg hover:bg-gray-50 transition-all border-l-4 cursor-pointer block"
+                  className="bg-gray-50 rounded-lg shadow-sm p-6 hover:shadow-xl hover:bg-white hover:scale-105 transition-all duration-300 border-l-4 cursor-pointer block border border-gray-200"
                   style={{ borderLeftColor: list.color }}
                 >
                   <div className="flex justify-between items-start mb-3">
@@ -438,14 +447,14 @@ function TodosContent() {
               ))}
             </div>
           ) : (
-            <div className="bg-white rounded-lg shadow-md overflow-hidden">
+            <div className="bg-gray-50 rounded-lg overflow-hidden border border-gray-200">
               <div className="divide-y divide-gray-200">
                 {filteredLists.map((list) => (
                   <Link
                     key={list.id}
                     href={`/todos/list/${list.id}`}
                     onClick={() => handleOpenList(list.id)}
-                    className="p-4 hover:bg-gray-50 transition-colors block cursor-pointer"
+                    className="p-4 hover:bg-white hover:shadow-lg hover:scale-[1.02] transition-all duration-300 block cursor-pointer"
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex-1 min-w-0">

@@ -52,6 +52,8 @@ interface TodoState {
   clearCompleted: (listId: number) => void;
   reorderTodos: (listId: number, todoIds: number[]) => void;
   toggleCollapse: (listId: number, todoId: number) => void;
+  moveToSubTodo: (listId: number, todoId: number, newParentId: number) => void;
+  moveToSameLevel: (listId: number, todoId: number, targetTodoId: number) => void;
 
   // Computed values
   getCurrentList: () => TodoList | null;
@@ -510,6 +512,143 @@ export const useTodoStore = create<TodoState>()(
               : list
           ),
         }));
+      },
+
+      moveToSubTodo: (listId: number, todoId: number, newParentId: number) => {
+        console.log('=== moveToSubTodo called ===');
+        console.log('Moving todo', todoId, 'to be child of', newParentId);
+        
+        set(state => {
+          const updatedTodoLists = state.todoLists.map(listItem => {
+            if (listItem.id !== listId) return listItem;
+
+            const todos = [...listItem.todos];
+            const todoIndex = todos.findIndex(t => t.id === todoId);
+            const parentIndex = todos.findIndex(t => t.id === newParentId);
+            
+            if (todoIndex === -1 || parentIndex === -1) {
+              console.log('Todo or parent not found');
+              return listItem;
+            }
+
+            const todo = todos[todoIndex];
+            const parent = todos[parentIndex];
+            
+            // Prevent circular dependencies
+            const wouldCreateCircle = (checkId: number, targetParentId: number): boolean => {
+              if (checkId === targetParentId) return true;
+              const checkParent = todos.find(t => t.id === targetParentId);
+              return checkParent?.parentId ? wouldCreateCircle(checkId, checkParent.parentId) : false;
+            };
+            
+            if (wouldCreateCircle(todoId, newParentId)) {
+              console.log('Would create circular dependency');
+              return listItem;
+            }
+
+            // Calculate new level and update todo
+            const newLevel = parent.level + 1;
+            const levelDiff = newLevel - todo.level;
+            
+            todos[todoIndex] = {
+              ...todo,
+              parentId: newParentId,
+              level: newLevel,
+              updatedAt: new Date()
+            };
+
+            // Update all descendants
+            const updateDescendants = (parentId: number, levelChange: number) => {
+              todos.forEach((t, index) => {
+                if (t.parentId === parentId) {
+                  todos[index] = {
+                    ...t,
+                    level: t.level + levelChange,
+                    updatedAt: new Date()
+                  };
+                  updateDescendants(t.id, levelChange);
+                }
+              });
+            };
+
+            if (levelDiff !== 0) {
+              updateDescendants(todoId, levelDiff);
+            }
+
+            console.log('Move completed - new structure:', todos.map(t => ({ id: t.id, text: t.text.substring(0, 20), level: t.level, parentId: t.parentId })));
+
+            return {
+              ...listItem,
+              todos,
+              lastModified: new Date(),
+            };
+          });
+
+          return { todoLists: updatedTodoLists };
+        });
+      },
+
+      moveToSameLevel: (listId: number, todoId: number, targetTodoId: number) => {
+        console.log('=== moveToSameLevel called ===');
+        console.log('Moving todo', todoId, 'to same level as', targetTodoId);
+        
+        set(state => {
+          const updatedTodoLists = state.todoLists.map(listItem => {
+            if (listItem.id !== listId) return listItem;
+
+            const todos = [...listItem.todos];
+            const todoIndex = todos.findIndex(t => t.id === todoId);
+            const targetIndex = todos.findIndex(t => t.id === targetTodoId);
+            
+            if (todoIndex === -1 || targetIndex === -1) {
+              console.log('Todo or target not found');
+              return listItem;
+            }
+
+            const todo = todos[todoIndex];
+            const target = todos[targetIndex];
+            
+            // Set same parent and level as target
+            const newLevel = target.level;
+            const newParentId = target.parentId;
+            const levelDiff = newLevel - todo.level;
+            
+            todos[todoIndex] = {
+              ...todo,
+              parentId: newParentId,
+              level: newLevel,
+              updatedAt: new Date()
+            };
+
+            // Update all descendants
+            const updateDescendants = (parentId: number, levelChange: number) => {
+              todos.forEach((t, index) => {
+                if (t.parentId === parentId) {
+                  todos[index] = {
+                    ...t,
+                    level: t.level + levelChange,
+                    updatedAt: new Date()
+                  };
+                  updateDescendants(t.id, levelChange);
+                }
+              });
+            };
+
+            if (levelDiff !== 0) {
+              updateDescendants(todoId, levelDiff);
+            }
+
+            console.log('Same level move completed - new structure:', todos.map(t => ({ id: t.id, text: t.text.substring(0, 20), level: t.level, parentId: t.parentId })));
+
+            return {
+              ...listItem,
+              todos,
+              lastModified: new Date(),
+            };
+          });
+
+          return { todoLists: updatedTodoLists };
+        });
       },
 
       // Computed values
