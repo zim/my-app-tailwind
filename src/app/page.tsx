@@ -708,7 +708,6 @@ export default function Home() {
 
   return (
     <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)] bg-gradient-to-br from-gray-800 via-gray-900 to-black dark:from-gray-900 dark:via-black dark:to-gray-900">
-
       {/* Animation Settings Panel */}
       <div className="fixed top-4 right-4 z-50" ref={settingsRef}>
         <button
@@ -846,6 +845,13 @@ export default function Home() {
             className="app-button relative overflow-hidden rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-purple-600 text-white gap-1 hover:bg-purple-700 font-medium text-xs sm:text-sm h-9 sm:h-10 px-3 sm:px-4 whitespace-nowrap shadow-lg hover:shadow-xl"
           >
             <span className="emoji">📊</span> D3.js Demo
+          </Link>
+          <Link
+            href="/games"
+            onClick={handleButtonClick}
+            className="app-button relative overflow-hidden rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-pink-600 text-white gap-1 hover:bg-pink-700 font-medium text-xs sm:text-sm h-9 sm:h-10 px-3 sm:px-4 whitespace-nowrap shadow-lg hover:shadow-xl"
+          >
+            <span className="emoji">🎮</span> Games Hub
           </Link>
         </div>
       </main>

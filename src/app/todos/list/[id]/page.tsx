@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { useTodoStore, Todo, getPriorityColor } from '@/store/todoStore';
 import { useHydration } from '@/hooks/useHydration';
+import Modal from '@/components/Modal';
 
 export default function TodoListPage() {
     const params = useParams();
@@ -34,6 +35,7 @@ export default function TodoListPage() {
     const [newTodoPriority, setNewTodoPriority] = useState<'low' | 'medium' | 'high' | 'urgent'>('medium');
     const [newTodoDueDate, setNewTodoDueDate] = useState('');
     const [newTodoDescription, setNewTodoDescription] = useState('');
+    const [showAddTodoModal, setShowAddTodoModal] = useState(false);
     const [filter, setFilter] = useState<'all' | 'active' | 'completed'>('all');
     const [searchText, setSearchText] = useState('');
     const [editingTodo, setEditingTodo] = useState<number | null>(null);
@@ -118,6 +120,7 @@ export default function TodoListPage() {
             setNewTodoPriority('medium');
             setNewTodoDueDate('');
             setNewTodoDescription('');
+            setShowAddTodoModal(false);
         }
     };
 
@@ -324,9 +327,32 @@ export default function TodoListPage() {
                     )}
                 </div>
 
-                {/* Add new todo */}
+                {/* Add new todo button */}
                 <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-                    <h3 className="text-lg font-semibold mb-4">Add New Todo</h3>
+                    <div className="flex items-center justify-between">
+                        <h3 className="text-lg font-semibold">Quick Actions</h3>
+                        <button
+                            onClick={() => setShowAddTodoModal(true)}
+                            className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
+                        >
+                            Add New Todo
+                        </button>
+                    </div>
+                </div>
+
+                {/* Add New Todo Modal */}
+                <Modal
+                    isOpen={showAddTodoModal}
+                    onClose={() => {
+                        setShowAddTodoModal(false);
+                        setNewTodo('');
+                        setNewTodoPriority('medium');
+                        setNewTodoDueDate('');
+                        setNewTodoDescription('');
+                    }}
+                    title="Add New Todo"
+                    maxWidth="lg"
+                >
                     <div className="space-y-4">
                         <input
                             type="text"
@@ -337,7 +363,7 @@ export default function TodoListPage() {
                             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         />
 
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Priority</label>
                                 <select
@@ -361,27 +387,39 @@ export default function TodoListPage() {
                                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                                 />
                             </div>
-
-                            <div className="flex items-end">
-                                <button
-                                    onClick={handleAddTodo}
-                                    disabled={!newTodo.trim()}
-                                    className="w-full px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
-                                >
-                                    Add Todo
-                                </button>
-                            </div>
                         </div>
 
                         <textarea
                             value={newTodoDescription}
                             onChange={(e) => setNewTodoDescription(e.target.value)}
                             placeholder="Description (optional)..."
-                            rows={2}
+                            rows={3}
                             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         />
+
+                        <div className="flex gap-2 pt-4">
+                            <button
+                                onClick={handleAddTodo}
+                                disabled={!newTodo.trim()}
+                                className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
+                            >
+                                Add Todo
+                            </button>
+                            <button
+                                onClick={() => {
+                                    setShowAddTodoModal(false);
+                                    setNewTodo('');
+                                    setNewTodoPriority('medium');
+                                    setNewTodoDueDate('');
+                                    setNewTodoDescription('');
+                                }}
+                                className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+                            >
+                                Cancel
+                            </button>
+                        </div>
                     </div>
-                </div>
+                </Modal>
 
                 {/* Search and filters */}
                 <div className="bg-white rounded-lg shadow-md p-6 mb-6">

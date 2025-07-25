@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useBudgetStore, type BudgetList } from '@/store/budgetStore';
 import { useHydration } from '@/hooks/useHydration';
 import PageLoadingSkeleton from '@/components/PageLoadingSkeleton';
+import Modal from '@/components/Modal';
 
 /**
  * Generates a random password with specified length
@@ -143,73 +144,81 @@ function BudgetContent() {
           </div>
         </div>
 
-        {/* Create New Budget List Form */}
-        {showCreateForm && (
-          <div className="bg-white rounded-lg shadow-md p-4 sm:p-6 mb-6">
-            <h2 className="text-lg sm:text-xl font-semibold text-gray-800 mb-4">Create New Budget List</h2>
-            <div className="space-y-3 sm:space-y-4">
-              <input
-                type="text"
-                placeholder="Budget list name"
-                value={newListName}
-                onChange={(e) => setNewListName(e.target.value)}
-                className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base"
-              />
-              <textarea
-                placeholder="Description (optional)"
-                value={newListDescription}
-                onChange={(e) => setNewListDescription(e.target.value)}
-                rows={2}
-                className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base"
-              />
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                <div className="flex items-center gap-3">
-                  <label className="text-sm font-medium text-gray-700">Color:</label>
-                  <input
-                    type="color"
-                    value={newListColor}
-                    onChange={(e) => setNewListColor(e.target.value)}
-                    className="w-12 h-8 border border-gray-300 rounded cursor-pointer"
-                  />
-                  <span className="text-xs sm:text-sm text-gray-500">{newListColor}</span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <label className="text-sm font-medium text-gray-700">Currency:</label>
-                  <select
-                    value={newListCurrency}
-                    onChange={(e) => setNewListCurrency(e.target.value)}
-                    className="px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base"
-                  >
-                    <option value="GBP">GBP (£)</option>
-                    <option value="USD">USD ($)</option>
-                    <option value="EUR">EUR (€)</option>
-                  </select>
-                </div>
+        {/* Create New Budget List Modal */}
+        <Modal
+          isOpen={showCreateForm}
+          onClose={() => {
+            setShowCreateForm(false);
+            setNewListName('');
+            setNewListDescription('');
+            setNewListColor('#3B82F6');
+            setNewListCurrency('GBP');
+          }}
+          title="Create New Budget List"
+          maxWidth="lg"
+        >
+          <div className="space-y-3 sm:space-y-4">
+            <input
+              type="text"
+              placeholder="Budget list name"
+              value={newListName}
+              onChange={(e) => setNewListName(e.target.value)}
+              className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base"
+            />
+            <textarea
+              placeholder="Description (optional)"
+              value={newListDescription}
+              onChange={(e) => setNewListDescription(e.target.value)}
+              rows={2}
+              className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base"
+            />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+              <div className="flex items-center gap-3">
+                <label className="text-sm font-medium text-gray-700">Color:</label>
+                <input
+                  type="color"
+                  value={newListColor}
+                  onChange={(e) => setNewListColor(e.target.value)}
+                  className="w-12 h-8 border border-gray-300 rounded cursor-pointer"
+                />
+                <span className="text-xs sm:text-sm text-gray-500">{newListColor}</span>
               </div>
-              <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
-                <button
-                  onClick={handleCreateList}
-                  disabled={!newListName.trim()}
-                  className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:bg-gray-300 transition-colors text-sm sm:text-base"
+              <div className="flex items-center gap-3">
+                <label className="text-sm font-medium text-gray-700">Currency:</label>
+                <select
+                  value={newListCurrency}
+                  onChange={(e) => setNewListCurrency(e.target.value)}
+                  className="px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base"
                 >
-                  Create List
-                </button>
-                <button
-                  onClick={() => {
-                    setShowCreateForm(false);
-                    setNewListName('');
-                    setNewListDescription('');
-                    setNewListColor('#3B82F6');
-                    setNewListCurrency('GBP');
-                  }}
-                  className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors text-sm sm:text-base"
-                >
-                  Cancel
-                </button>
+                  <option value="GBP">GBP (£)</option>
+                  <option value="USD">USD ($)</option>
+                  <option value="EUR">EUR (€)</option>
+                </select>
               </div>
             </div>
+            <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 pt-4">
+              <button
+                onClick={handleCreateList}
+                disabled={!newListName.trim()}
+                className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:bg-gray-300 transition-colors text-sm sm:text-base"
+              >
+                Create List
+              </button>
+              <button
+                onClick={() => {
+                  setShowCreateForm(false);
+                  setNewListName('');
+                  setNewListDescription('');
+                  setNewListColor('#3B82F6');
+                  setNewListCurrency('GBP');
+                }}
+                className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors text-sm sm:text-base"
+              >
+                Cancel
+              </button>
+            </div>
           </div>
-        )}
+        </Modal>
 
         {/* Recent Budget Lists */}
         {recentLists.length > 0 && (
