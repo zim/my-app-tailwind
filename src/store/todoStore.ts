@@ -10,6 +10,7 @@ export interface Todo {
   priority: 'low' | 'medium' | 'high' | 'urgent';
   dueDate?: Date;
   description?: string;
+  cost?: number; // Optional cost/budget for the todo item
   order: number;
   updatedAt: Date;
   // Sub-todo properties
@@ -44,11 +45,11 @@ interface TodoState {
   setCurrentList: (id: number | null) => void;
 
   // Todo management within a list
-  addTodo: (listId: number, text: string, priority?: 'low' | 'medium' | 'high' | 'urgent', dueDate?: Date, description?: string) => void;
-  addSubTodo: (listId: number, parentId: number, text: string, priority?: 'low' | 'medium' | 'high' | 'urgent', dueDate?: Date, description?: string) => void;
+  addTodo: (listId: number, text: string, priority?: 'low' | 'medium' | 'high' | 'urgent', dueDate?: Date, description?: string, cost?: number) => void;
+  addSubTodo: (listId: number, parentId: number, text: string, priority?: 'low' | 'medium' | 'high' | 'urgent', dueDate?: Date, description?: string, cost?: number) => void;
   toggleTodo: (listId: number, todoId: number) => void;
   deleteTodo: (listId: number, todoId: number) => void;
-  updateTodo: (listId: number, todoId: number, updates: Partial<Pick<Todo, 'text' | 'priority' | 'dueDate' | 'description' | 'order'>>) => void;
+  updateTodo: (listId: number, todoId: number, updates: Partial<Pick<Todo, 'text' | 'priority' | 'dueDate' | 'description' | 'order' | 'cost'>>) => void;
   clearCompleted: (listId: number) => void;
   reorderTodos: (listId: number, todoIds: number[]) => void;
   toggleCollapse: (listId: number, todoId: number) => void;
@@ -332,7 +333,7 @@ export const useTodoStore = create<TodoState>()(
       },
 
       // Todo management within a list
-      addTodo: (listId: number, text: string, priority = 'medium' as const, dueDate?: Date, description?: string) => {
+      addTodo: (listId: number, text: string, priority = 'medium' as const, dueDate?: Date, description?: string, cost?: number) => {
         if (!text.trim()) return;
 
         const list = get().todoLists.find(l => l.id === listId);
@@ -346,6 +347,7 @@ export const useTodoStore = create<TodoState>()(
           priority,
           dueDate,
           description,
+          cost,
           order: maxOrder + 1,
           updatedAt: new Date(),
           level: 0, // Default to top-level todo
@@ -364,7 +366,7 @@ export const useTodoStore = create<TodoState>()(
         }));
       },
 
-      addSubTodo: (listId: number, parentId: number, text: string, priority = 'medium' as const, dueDate?: Date, description?: string) => {
+      addSubTodo: (listId: number, parentId: number, text: string, priority = 'medium' as const, dueDate?: Date, description?: string, cost?: number) => {
         if (!text.trim()) return;
 
         const list = get().todoLists.find(l => l.id === listId);
@@ -383,6 +385,7 @@ export const useTodoStore = create<TodoState>()(
           priority,
           dueDate,
           description,
+          cost,
           order: maxOrder + 1,
           updatedAt: new Date(),
           level: parentTodo.level + 1,
