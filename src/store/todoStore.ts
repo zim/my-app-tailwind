@@ -42,6 +42,7 @@ interface TodoState {
   createTodoList: (name: string, description: string, color?: string) => void;
   deleteTodoList: (id: number) => void;
   updateTodoList: (id: number, updates: Partial<Pick<TodoList, 'name' | 'description' | 'color' | 'isArchived' | 'sortBy' | 'showCompleted'>>) => void;
+  reorderTodoLists: (listIds: number[]) => void;
   setCurrentList: (id: number | null) => void;
 
   // Todo management within a list
@@ -328,6 +329,14 @@ export const useTodoStore = create<TodoState>()(
         }));
       },
 
+      reorderTodoLists: (listIds: number[]) => {
+        set(state => {
+          const listMap = new Map(state.todoLists.map(list => [list.id, list]));
+          const reorderedLists = listIds.map(id => listMap.get(id)).filter(Boolean) as TodoList[];
+          return { todoLists: reorderedLists };
+        });
+      },
+
       setCurrentList: (id: number | null) => {
         set({ currentListId: id });
       },
@@ -520,7 +529,7 @@ export const useTodoStore = create<TodoState>()(
       moveToSubTodo: (listId: number, todoId: number, newParentId: number) => {
         console.log('=== moveToSubTodo called ===');
         console.log('Moving todo', todoId, 'to be child of', newParentId);
-        
+
         set(state => {
           const updatedTodoLists = state.todoLists.map(listItem => {
             if (listItem.id !== listId) return listItem;
@@ -528,7 +537,7 @@ export const useTodoStore = create<TodoState>()(
             const todos = [...listItem.todos];
             const todoIndex = todos.findIndex(t => t.id === todoId);
             const parentIndex = todos.findIndex(t => t.id === newParentId);
-            
+
             if (todoIndex === -1 || parentIndex === -1) {
               console.log('Todo or parent not found');
               return listItem;
@@ -536,14 +545,14 @@ export const useTodoStore = create<TodoState>()(
 
             const todo = todos[todoIndex];
             const parent = todos[parentIndex];
-            
+
             // Prevent circular dependencies
             const wouldCreateCircle = (checkId: number, targetParentId: number): boolean => {
               if (checkId === targetParentId) return true;
               const checkParent = todos.find(t => t.id === targetParentId);
               return checkParent?.parentId ? wouldCreateCircle(checkId, checkParent.parentId) : false;
             };
-            
+
             if (wouldCreateCircle(todoId, newParentId)) {
               console.log('Would create circular dependency');
               return listItem;
@@ -552,7 +561,7 @@ export const useTodoStore = create<TodoState>()(
             // Calculate new level and update todo
             const newLevel = parent.level + 1;
             const levelDiff = newLevel - todo.level;
-            
+
             todos[todoIndex] = {
               ...todo,
               parentId: newParentId,
@@ -594,7 +603,7 @@ export const useTodoStore = create<TodoState>()(
       moveToSameLevel: (listId: number, todoId: number, targetTodoId: number) => {
         console.log('=== moveToSameLevel called ===');
         console.log('Moving todo', todoId, 'to same level as', targetTodoId);
-        
+
         set(state => {
           const updatedTodoLists = state.todoLists.map(listItem => {
             if (listItem.id !== listId) return listItem;
@@ -602,7 +611,7 @@ export const useTodoStore = create<TodoState>()(
             const todos = [...listItem.todos];
             const todoIndex = todos.findIndex(t => t.id === todoId);
             const targetIndex = todos.findIndex(t => t.id === targetTodoId);
-            
+
             if (todoIndex === -1 || targetIndex === -1) {
               console.log('Todo or target not found');
               return listItem;
@@ -610,12 +619,12 @@ export const useTodoStore = create<TodoState>()(
 
             const todo = todos[todoIndex];
             const target = todos[targetIndex];
-            
+
             // Set same parent and level as target
             const newLevel = target.level;
             const newParentId = target.parentId;
             const levelDiff = newLevel - todo.level;
-            
+
             todos[todoIndex] = {
               ...todo,
               parentId: newParentId,

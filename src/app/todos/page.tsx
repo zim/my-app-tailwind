@@ -1,10 +1,216 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useTodoStore } from '@/store/todoStore';
 import { useHydration } from '@/hooks/useHydration';
 import Modal from '@/components/Modal';
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import {
+  useSortable,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+
+// Sortable Todo List Item Component
+function SortableTodoListItem({
+  list,
+  viewMode,
+  handleOpenList,
+  handleDeleteList,
+  getTotalTodos,
+  getCompletedTodos,
+  getActiveTodos,
+}: {
+  list: any;
+  viewMode: 'grid' | 'list';
+  handleOpenList: (id: number) => void;
+  handleDeleteList: (id: number, name: string) => void;
+  getTotalTodos: (id: number) => number;
+  getCompletedTodos: (id: number) => number;
+  getActiveTodos: (id: number) => number;
+}) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: list.id });
+
+  const [wasDragging, setWasDragging] = useState(false);
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  // Track when dragging starts and ends
+  useEffect(() => {
+    if (isDragging) {
+      setWasDragging(true);
+    } else if (wasDragging) {
+      // Reset the flag after a short delay to allow the click event to be prevented
+      const timer = setTimeout(() => setWasDragging(false), 100);
+      return () => clearTimeout(timer);
+    }
+  }, [isDragging, wasDragging]);
+
+  const handleLinkClick = (e: React.MouseEvent) => {
+    if (wasDragging) {
+      e.preventDefault();
+      e.stopPropagation();
+      return;
+    }
+    handleOpenList(list.id);
+  };
+
+  if (viewMode === 'grid') {
+    return (
+      <div
+        ref={setNodeRef}
+        style={style}
+        className={`${isDragging ? 'z-10' : ''}`}
+      >
+        <Link
+          href={`/todos/list/${list.id}`}
+          onClick={handleLinkClick}
+          className="bg-gray-50 rounded-lg shadow-sm p-6 hover:shadow-xl hover:bg-white hover:scale-105 transition-all duration-300 border-l-4 cursor-pointer block border border-gray-200"
+          style={{ borderLeftColor: list.color }}
+        >
+          <div className="flex justify-between items-start mb-3">
+            <div className="flex items-center gap-2">
+              <button
+                {...attributes}
+                {...listeners}
+                className="text-gray-400 hover:text-gray-600 cursor-grab active:cursor-grabbing focus:outline-none p-1"
+                title="Drag to reorder"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                }}
+              >
+                ⋮⋮
+              </button>
+              <h3 className="font-semibold text-xl text-gray-800 truncate">{list.name}</h3>
+            </div>
+            <button
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                handleDeleteList(list.id, list.name);
+              }}
+              className="text-red-500 hover:text-red-700 text-sm p-1 hover:bg-red-50 rounded"
+              title="Delete list"
+            >
+              ✕
+            </button>
+          </div>
+
+          {list.description && (
+            <p className="text-gray-600 mb-4 line-clamp-3">{list.description}</p>
+          )}
+
+          <div className="flex justify-between items-center mb-4">
+            <div className="flex gap-4 text-sm">
+              <span className="text-blue-600 font-medium">{getTotalTodos(list.id)} total</span>
+              <span className="text-green-600">{getCompletedTodos(list.id)} done</span>
+              <span className="text-orange-600">{getActiveTodos(list.id)} active</span>
+            </div>
+          </div>
+
+          <div className="text-xs text-gray-500 mb-4">
+            Created: {list.createdAt.toLocaleDateString()}
+            <br />
+            Modified: {list.lastModified.toLocaleDateString()}
+          </div>
+        </Link>
+      </div>
+    );
+  }
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={`${isDragging ? 'z-10' : ''}`}
+    >
+      <Link
+        href={`/todos/list/${list.id}`}
+        onClick={handleLinkClick}
+        className="p-4 hover:bg-white hover:shadow-lg hover:scale-[1.02] transition-all duration-300 block cursor-pointer"
+      >
+        <div className="flex items-center justify-between">
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-4">
+              <button
+                {...attributes}
+                {...listeners}
+                className="text-gray-400 hover:text-gray-600 cursor-grab active:cursor-grabbing focus:outline-none p-1"
+                title="Drag to reorder"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                }}
+              >
+                ⋮⋮
+              </button>
+              <div className="flex-1 min-w-0">
+                <h3 className="font-semibold text-lg text-gray-800 truncate">{list.name}</h3>
+                {list.description && (
+                  <p className="text-gray-600 text-sm truncate mt-1">{list.description}</p>
+                )}
+              </div>
+
+              <div className="flex items-center gap-6 text-sm">
+                <div className="flex gap-4">
+                  <span className="text-blue-600 font-medium">{getTotalTodos(list.id)} total</span>
+                  <span className="text-green-600">{getCompletedTodos(list.id)} done</span>
+                  <span className="text-orange-600">{getActiveTodos(list.id)} active</span>
+                </div>
+
+                <div className="text-xs text-gray-500 hidden sm:block">
+                  Modified: {list.lastModified.toLocaleDateString()}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 ml-4">
+            <button
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                handleDeleteList(list.id, list.name);
+              }}
+              className="p-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"
+              title="Delete list"
+            >
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      </Link>
+    </div>
+  );
+}
 
 function TodosContent() {
   const isHydrated = useHydration();
@@ -12,6 +218,7 @@ function TodosContent() {
     todoLists,
     createTodoList,
     deleteTodoList,
+    reorderTodoLists,
     setCurrentList,
     getTotalTodos,
     getActiveTodos,
@@ -26,6 +233,21 @@ function TodosContent() {
   const [searchText, setSearchText] = useState('');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('list');
   const [showRecentLists, setShowRecentLists] = useState(false);
+  const [sortBy, setSortBy] = useState<'name' | 'created' | 'modified' | 'todos'>('modified');
+  const [filterBy, setFilterBy] = useState<'all' | 'active' | 'completed'>('all');
+
+  // Scroll to top when component mounts
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
+  // Drag and drop sensors
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
 
   const handleCreateList = () => {
     if (newListName.trim()) {
@@ -54,6 +276,21 @@ function TodosContent() {
     setCurrentList(id);
   };
 
+  // Handle drag end for reordering lists
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (active.id !== over?.id) {
+      const oldIndex = filteredLists.findIndex((list) => list.id === active.id);
+      const newIndex = filteredLists.findIndex((list) => list.id === over?.id);
+
+      if (oldIndex !== -1 && newIndex !== -1) {
+        const reorderedLists = arrayMove(filteredLists, oldIndex, newIndex);
+        reorderTodoLists(reorderedLists.map(list => list.id));
+      }
+    }
+  };
+
   // Don't render content until hydrated to prevent hydration mismatch
   if (!isHydrated) {
     return (
@@ -76,12 +313,39 @@ function TodosContent() {
   }
 
   // Filter lists by search text
-  const filteredLists = searchText
+  let filteredLists = searchText
     ? todoLists.filter(list =>
       list.name.toLowerCase().includes(searchText.toLowerCase()) ||
       list.description.toLowerCase().includes(searchText.toLowerCase())
     )
     : todoLists;
+
+  // Filter by completion status
+  if (filterBy === 'active') {
+    filteredLists = filteredLists.filter(list => getActiveTodos(list.id) > 0);
+  } else if (filterBy === 'completed') {
+    filteredLists = filteredLists.filter(list => {
+      const totalTodos = getTotalTodos(list.id);
+      const completedTodos = getCompletedTodos(list.id);
+      return totalTodos > 0 && totalTodos === completedTodos;
+    });
+  }
+
+  // Sort lists
+  filteredLists = [...filteredLists].sort((a, b) => {
+    switch (sortBy) {
+      case 'name':
+        return a.name.localeCompare(b.name);
+      case 'created':
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      case 'modified':
+        return new Date(b.lastModified).getTime() - new Date(a.lastModified).getTime();
+      case 'todos':
+        return getTotalTodos(b.id) - getTotalTodos(a.id);
+      default:
+        return 0;
+    }
+  });
 
   const recentLists = getRecentLists();
 
@@ -139,47 +403,83 @@ function TodosContent() {
           </div>
         </div>
 
-        {/* Search and View Controls */}
-        <div className="mb-6 space-y-4">
-          <input
-            type="text"
-            value={searchText}
-            onChange={(e) => setSearchText(e.target.value)}
-            placeholder="Search todo lists..."
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          />
+        {/* Filter Panel */}
+        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+          <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
+            <div className="flex flex-wrap gap-2 items-center flex-1">
+              <span className="text-sm font-medium text-gray-700">Filter:</span>
+              <select
+                value={filterBy}
+                onChange={(e) => setFilterBy(e.target.value as 'all' | 'active' | 'completed')}
+                className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 capitalize"
+              >
+                <option value="all">All Lists</option>
+                <option value="active">With Active Todos</option>
+                <option value="completed">Completed Lists</option>
+              </select>
 
-          {/* View Mode Toggle */}
-          <div className="flex justify-between items-center">
-            <div className="flex gap-2">
-              <button
-                onClick={() => setViewMode('grid')}
-                className={`px-4 py-2 rounded-lg transition-colors flex items-center gap-2 ${viewMode === 'grid'
-                  ? 'bg-blue-500 text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                  }`}
+              <span className="text-sm font-medium text-gray-700">Sort:</span>
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value as 'name' | 'created' | 'modified' | 'todos')}
+                className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
-                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                  <path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM11 13a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
-                </svg>
-                Grid
-              </button>
+                <option value="modified">Last Modified</option>
+                <option value="name">Name (A-Z)</option>
+                <option value="created">Date Created</option>
+                <option value="todos">Todo Count</option>
+              </select>
+
+              <input
+                type="text"
+                value={searchText}
+                onChange={(e) => setSearchText(e.target.value)}
+                placeholder="Search todo lists..."
+                className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent min-w-[200px]"
+              />
+            </div>
+
+            <div className="flex gap-2 items-center">
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setViewMode('grid')}
+                  className={`px-4 py-2 rounded-lg transition-colors flex items-center gap-2 ${viewMode === 'grid'
+                    ? 'bg-blue-500 text-white'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    }`}
+                >
+                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM11 13a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                  </svg>
+                  Grid
+                </button>
+                <button
+                  onClick={() => setViewMode('list')}
+                  className={`px-4 py-2 rounded-lg transition-colors flex items-center gap-2 ${viewMode === 'list'
+                    ? 'bg-blue-500 text-white'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    }`}
+                >
+                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" />
+                  </svg>
+                  List
+                </button>
+              </div>
+
               <button
-                onClick={() => setViewMode('list')}
-                className={`px-4 py-2 rounded-lg transition-colors flex items-center gap-2 ${viewMode === 'list'
-                  ? 'bg-blue-500 text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                  }`}
+                onClick={() => setShowForm(true)}
+                className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors whitespace-nowrap"
               >
-                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" />
-                </svg>
-                List
+                Add New List
               </button>
             </div>
-            <span className="text-sm text-gray-500">
-              {filteredLists.length} {filteredLists.length === 1 ? 'list' : 'lists'}
-            </span>
+          </div>
+
+          <div className="mt-4 text-sm text-gray-500">
+            Showing {filteredLists.length} of {todoLists.length} {filteredLists.length === 1 ? 'list' : 'lists'}
+            {searchText && ` matching "${searchText}"`}
+            {filterBy !== 'all' && ` (${filterBy})`}
           </div>
         </div>
 
@@ -401,105 +701,51 @@ function TodosContent() {
                 )}
               </div>
             </div>
-          ) : viewMode === 'grid' ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredLists.map((list) => (
-                <Link
-                  key={list.id}
-                  href={`/todos/list/${list.id}`}
-                  onClick={() => handleOpenList(list.id)}
-                  className="bg-gray-50 rounded-lg shadow-sm p-6 hover:shadow-xl hover:bg-white hover:scale-105 transition-all duration-300 border-l-4 cursor-pointer block border border-gray-200"
-                  style={{ borderLeftColor: list.color }}
-                >
-                  <div className="flex justify-between items-start mb-3">
-                    <h3 className="font-semibold text-xl text-gray-800 truncate">{list.name}</h3>
-                    <button
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        handleDeleteList(list.id, list.name);
-                      }}
-                      className="text-red-500 hover:text-red-700 text-sm p-1 hover:bg-red-50 rounded"
-                      title="Delete list"
-                    >
-                      ✕
-                    </button>
-                  </div>
-
-                  {list.description && (
-                    <p className="text-gray-600 mb-4 line-clamp-3">{list.description}</p>
-                  )}
-
-                  <div className="flex justify-between items-center mb-4">
-                    <div className="flex gap-4 text-sm">
-                      <span className="text-blue-600 font-medium">{getTotalTodos(list.id)} total</span>
-                      <span className="text-green-600">{getCompletedTodos(list.id)} done</span>
-                      <span className="text-orange-600">{getActiveTodos(list.id)} active</span>
-                    </div>
-                  </div>
-
-                  <div className="text-xs text-gray-500 mb-4">
-                    Created: {list.createdAt.toLocaleDateString()}
-                    <br />
-                    Modified: {list.lastModified.toLocaleDateString()}
-                  </div>
-                </Link>
-              ))}
-            </div>
           ) : (
-            <div className="bg-gray-50 rounded-lg overflow-hidden border border-gray-200">
-              <div className="divide-y divide-gray-200">
-                {filteredLists.map((list) => (
-                  <Link
-                    key={list.id}
-                    href={`/todos/list/${list.id}`}
-                    onClick={() => handleOpenList(list.id)}
-                    className="p-4 hover:bg-white hover:shadow-lg hover:scale-[1.02] transition-all duration-300 block cursor-pointer"
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-4">
-                          <div className="flex-1 min-w-0">
-                            <h3 className="font-semibold text-lg text-gray-800 truncate">{list.name}</h3>
-                            {list.description && (
-                              <p className="text-gray-600 text-sm truncate mt-1">{list.description}</p>
-                            )}
-                          </div>
-
-                          <div className="flex items-center gap-6 text-sm">
-                            <div className="flex gap-4">
-                              <span className="text-blue-600 font-medium">{getTotalTodos(list.id)} total</span>
-                              <span className="text-green-600">{getCompletedTodos(list.id)} done</span>
-                              <span className="text-orange-600">{getActiveTodos(list.id)} active</span>
-                            </div>
-
-                            <div className="text-xs text-gray-500 hidden sm:block">
-                              Modified: {list.lastModified.toLocaleDateString()}
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center gap-2 ml-4">
-                        <button
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            handleDeleteList(list.id, list.name);
-                          }}
-                          className="p-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"
-                          title="Delete list"
-                        >
-                          <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-                          </svg>
-                        </button>
-                      </div>
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragEnd={handleDragEnd}
+            >
+              <SortableContext
+                items={filteredLists.map(list => list.id)}
+                strategy={verticalListSortingStrategy}
+              >
+                {viewMode === 'grid' ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {filteredLists.map((list) => (
+                      <SortableTodoListItem
+                        key={list.id}
+                        list={list}
+                        viewMode={viewMode}
+                        handleOpenList={handleOpenList}
+                        handleDeleteList={handleDeleteList}
+                        getTotalTodos={getTotalTodos}
+                        getCompletedTodos={getCompletedTodos}
+                        getActiveTodos={getActiveTodos}
+                      />
+                    ))}
+                  </div>
+                ) : (
+                  <div className="bg-gray-50 rounded-lg overflow-hidden border border-gray-200">
+                    <div className="divide-y divide-gray-200">
+                      {filteredLists.map((list) => (
+                        <SortableTodoListItem
+                          key={list.id}
+                          list={list}
+                          viewMode={viewMode}
+                          handleOpenList={handleOpenList}
+                          handleDeleteList={handleDeleteList}
+                          getTotalTodos={getTotalTodos}
+                          getCompletedTodos={getCompletedTodos}
+                          getActiveTodos={getActiveTodos}
+                        />
+                      ))}
                     </div>
-                  </Link>
-                ))}
-              </div>
-            </div>
+                  </div>
+                )}
+              </SortableContext>
+            </DndContext>
           )}
         </div>
       </div>

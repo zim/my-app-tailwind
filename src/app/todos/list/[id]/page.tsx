@@ -93,11 +93,9 @@ function SortableTodoItem({
         <li
             ref={setNodeRef}
             style={{ ...style, marginLeft: `${indentLevel * 2}rem` }}
-            className={`transition-all duration-300 ${
-                isDragging ? 'shadow-lg z-10 opacity-50' : ''
-            } ${
-                isOver ? 'bg-blue-50' : ''
-            }`}
+            className={`transition-all duration-300 ${isDragging ? 'shadow-lg z-10 opacity-50' : ''
+                } ${isOver ? 'bg-blue-50' : ''
+                }`}
         >
             <div className="p-4 hover:bg-gray-50 border-b border-gray-100">
                 <div className="space-y-2">
@@ -230,18 +228,16 @@ function SortableTodoItem({
             {showDropZone && (
                 <div
                     ref={setDroppableRef}
-                    className={`transition-all duration-200 mx-2 my-1 ${
-                        isOver 
-                            ? 'p-4 bg-blue-100 border-2 border-blue-500 border-dashed rounded-lg shadow-md' 
-                            : 'p-3 bg-gray-50 border-2 border-gray-300 border-dashed rounded-lg hover:border-blue-400 hover:bg-blue-50'
-                    }`}
+                    className={`transition-all duration-200 mx-2 my-1 ${isOver
+                        ? 'p-4 bg-blue-100 border-2 border-blue-500 border-dashed rounded-lg shadow-md'
+                        : 'p-3 bg-gray-50 border-2 border-gray-300 border-dashed rounded-lg hover:border-blue-400 hover:bg-blue-50'
+                        }`}
                     style={{ marginLeft: `${(indentLevel + 1) * 2 + 0.5}rem` }}
                 >
-                    <div className={`text-sm text-center font-medium ${
-                        isOver ? 'text-blue-800' : 'text-gray-600'
-                    }`}>
-                        {isOver 
-                            ? `📌 Drop to make sub-task of "${todo.text.length > 20 ? todo.text.substring(0, 20) + '...' : todo.text}"` 
+                    <div className={`text-sm text-center font-medium ${isOver ? 'text-blue-800' : 'text-gray-600'
+                        }`}>
+                        {isOver
+                            ? `📌 Drop to make sub-task of "${todo.text.length > 20 ? todo.text.substring(0, 20) + '...' : todo.text}"`
                             : `➕ Drop here to create sub-task (Level ${indentLevel + 2}) - Unlimited depth allowed`
                         }
                     </div>
@@ -334,11 +330,16 @@ export default function TodoListPage() {
         }
     }, [isHydrated, currentList, listId, router]);
 
+    // Scroll to top when component mounts
+    useEffect(() => {
+        window.scrollTo(0, 0);
+    }, []);
+
     // Don't render content until hydrated to prevent hydration mismatch
     if (!isHydrated) {
         return (
             <div className="min-h-screen bg-slate-300 py-8">
-                <div className="max-w-4xl mx-auto px-4">
+                <div className="max-w-6xl mx-auto px-4">
                     <div className="flex items-center justify-between mb-8">
                         <Link
                             href="/todos"
@@ -532,9 +533,9 @@ export default function TodoListPage() {
         if (typeof over.id === 'string' && over.id.startsWith('drop-')) {
             const targetTodoId = parseInt(over.id.replace('drop-', ''));
             const draggedTodoId = active.id as number;
-            
+
             console.log('🎯 DROP ZONE: Moving todo', draggedTodoId, 'to become sub-todo of', targetTodoId);
-            
+
             // Simple validation - just prevent self-drop and circular dependencies
             if (draggedTodoId === targetTodoId) {
                 console.log('Cannot drop on self');
@@ -555,7 +556,7 @@ export default function TodoListPage() {
 
             console.log('✅ Creating sub-task relationship');
             moveToSubTodo(listId, draggedTodoId, targetTodoId);
-            
+
             // Auto-expand parent if collapsed
             setTimeout(() => {
                 const parent = getCurrentList()?.todos.find(t => t.id === targetTodoId);
@@ -570,12 +571,12 @@ export default function TodoListPage() {
         // Check if dropping directly on another todo item (make sibling at same level)  
         const targetTodoId = over.id as number;
         const draggedTodoId = active.id as number;
-        
+
         console.log('🎯 DIRECT DROP: Moving todo', draggedTodoId, 'to same level as', targetTodoId);
-        
+
         const targetTodo = currentList?.todos.find(todo => todo.id === targetTodoId);
         const draggedTodo = currentList?.todos.find(todo => todo.id === draggedTodoId);
-        
+
         if (targetTodo && draggedTodo) {
             // Simple validation - prevent self-drop and circular dependencies
             if (draggedTodoId === targetTodoId) {
@@ -598,7 +599,7 @@ export default function TodoListPage() {
             console.log('✅ Making items siblings');
             console.log('Target level:', targetTodo.level, 'Target parent:', targetTodo.parentId);
             moveToSameLevel(listId, draggedTodoId, targetTodoId);
-            
+
             setTimeout(() => {
                 forceUpdate({});
             }, 100);
@@ -646,7 +647,7 @@ export default function TodoListPage() {
 
     return (
         <div className="min-h-screen bg-slate-300 py-8">
-            <div className="max-w-4xl mx-auto px-4">
+            <div className="max-w-6xl mx-auto px-4">
                 {/* Header */}
                 <div className="flex items-center justify-between mb-8">
                     <Link
@@ -690,24 +691,6 @@ export default function TodoListPage() {
                             )}
                             <span>Last modified: {currentList.lastModified.toLocaleDateString()}</span>
                         </div>
-                    </div>
-                </div>
-
-                {/* Add new todo button */}
-                <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <h3 className="text-lg font-semibold">Quick Actions</h3>
-                            <p className="text-sm text-gray-600 mt-1">
-                                💡 <strong>Drag & Drop Tips:</strong> Grab the ⋮⋮ handle and drag todo items onto the drop zones that appear below other todos to create sub-tasks. Maximum 4 hierarchy levels supported.
-                            </p>
-                        </div>
-                        <button
-                            onClick={() => setShowAddTodoModal(true)}
-                            className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
-                        >
-                            Add New Todo
-                        </button>
                     </div>
                 </div>
 
@@ -1040,47 +1023,47 @@ export default function TodoListPage() {
 
                 {/* Search and filters */}
                 <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-                    <div className="space-y-4">
-                        <input
-                            type="text"
-                            value={searchText}
-                            onChange={(e) => setSearchText(e.target.value)}
-                            placeholder="Search todos..."
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        />
+                    <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
+                        <div className="flex flex-wrap gap-2 items-center flex-1">
+                            <span className="text-sm font-medium text-gray-700">Filter:</span>
+                            <select
+                                value={filter}
+                                onChange={(e) => setFilter(e.target.value as 'all' | 'active' | 'completed')}
+                                className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 capitalize"
+                            >
+                                <option value="all">All</option>
+                                <option value="active">Active</option>
+                                <option value="completed">Completed</option>
+                            </select>
 
-                        <div className="flex flex-col sm:flex-row gap-4 justify-between">
-                            <div className="flex gap-2">
-                                <span className="text-sm font-medium text-gray-700 self-center">Filter:</span>
-                                {(['all', 'active', 'completed'] as const).map((filterType) => (
-                                    <button
-                                        key={filterType}
-                                        onClick={() => setFilter(filterType)}
-                                        className={`px-4 py-2 rounded-lg capitalize transition-colors ${filter === filterType
-                                            ? 'bg-blue-500 text-white'
-                                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                                            }`}
-                                    >
-                                        {filterType}
-                                    </button>
-                                ))}
-                            </div>
+                            <span className="text-sm font-medium text-gray-700">Sort:</span>
+                            <select
+                                value={currentList?.sortBy || 'manual'}
+                                onChange={(e) => updateTodoList(listId, { sortBy: e.target.value as 'manual' | 'priority' | 'dueDate' | 'created' | 'alphabetical' })}
+                                className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            >
+                                <option value="manual">Manual Order</option>
+                                <option value="priority">Priority</option>
+                                <option value="dueDate">Due Date</option>
+                                <option value="created">Created Date</option>
+                                <option value="alphabetical">Alphabetical</option>
+                            </select>
 
-                            <div className="flex gap-2">
-                                <span className="text-sm font-medium text-gray-700 self-center">Sort:</span>
-                                <select
-                                    value={currentList?.sortBy || 'manual'}
-                                    onChange={(e) => updateTodoList(listId, { sortBy: e.target.value as 'manual' | 'priority' | 'dueDate' | 'created' | 'alphabetical' })}
-                                    className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                >
-                                    <option value="manual">Manual Order</option>
-                                    <option value="priority">Priority</option>
-                                    <option value="dueDate">Due Date</option>
-                                    <option value="created">Created Date</option>
-                                    <option value="alphabetical">Alphabetical</option>
-                                </select>
-                            </div>
+                            <input
+                                type="text"
+                                value={searchText}
+                                onChange={(e) => setSearchText(e.target.value)}
+                                placeholder="Search todos..."
+                                className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent min-w-[200px]"
+                            />
                         </div>
+
+                        <button
+                            onClick={() => setShowAddTodoModal(true)}
+                            className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors whitespace-nowrap"
+                        >
+                            Add New Todo
+                        </button>
                     </div>
                 </div>
 
@@ -1089,7 +1072,7 @@ export default function TodoListPage() {
                     {isDragActive && (
                         <div className="bg-blue-50 border-b border-blue-200 p-4">
                             <div className="text-sm text-blue-700 text-center">
-                                🎯 <strong>Dragging:</strong> "{draggedTodoText.length > 30 ? draggedTodoText.substring(0, 30) + '...' : draggedTodoText}" 
+                                🎯 <strong>Dragging:</strong> "{draggedTodoText.length > 30 ? draggedTodoText.substring(0, 30) + '...' : draggedTodoText}"
                                 <br />
                                 <span className="text-xs">Drop ON items = same level siblings | Drop IN zones = sub-tasks (unlimited depth)</span>
                             </div>
