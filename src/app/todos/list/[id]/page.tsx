@@ -89,6 +89,38 @@ function SortableTodoItem({
     // Allow unlimited nesting depth
     const showDropZone = isDragActive && !isDragging;
 
+    // Get background color based on priority
+    const getPriorityBackgroundColor = (priority: 'low' | 'medium' | 'high' | 'urgent') => {
+        switch (priority) {
+            case 'urgent':
+                return 'bg-red-50 border-l-red-400';
+            case 'high':
+                return 'bg-orange-50 border-l-orange-400';
+            case 'medium':
+                return 'bg-yellow-50 border-l-yellow-400';
+            case 'low':
+                return 'bg-green-50 border-l-green-400';
+            default:
+                return 'bg-white border-l-gray-300';
+        }
+    };
+
+    // Get hover background color based on priority (darker version)
+    const getPriorityHoverColor = (priority: 'low' | 'medium' | 'high' | 'urgent') => {
+        switch (priority) {
+            case 'urgent':
+                return 'hover:bg-red-100';
+            case 'high':
+                return 'hover:bg-orange-100';
+            case 'medium':
+                return 'hover:bg-yellow-100';
+            case 'low':
+                return 'hover:bg-green-100';
+            default:
+                return 'hover:bg-gray-50';
+        }
+    };
+
     return (
         <li
             ref={setNodeRef}
@@ -97,7 +129,7 @@ function SortableTodoItem({
                 } ${isOver ? 'bg-blue-50' : ''
                 }`}
         >
-            <div className="p-4 hover:bg-gray-50 border-b border-gray-100">
+            <div className={`p-4 border-b border-gray-100 border-l-4 ${getPriorityBackgroundColor(todo.priority || 'medium')} ${getPriorityHoverColor(todo.priority || 'medium')}`}>
                 <div className="space-y-2">
                     <div className="flex items-center gap-3">
                         {/* Drag Handle */}
@@ -149,19 +181,19 @@ function SortableTodoItem({
                                 </span>
 
                                 {/* Level indicator */}
-                                {indentLevel > 0 && (
+                                {/* {indentLevel > 0 && (
                                     <span className="text-xs text-gray-400 bg-gray-100 px-2 py-1 rounded">
                                         Level {indentLevel + 1}
                                     </span>
-                                )}
+                                )} */}
 
                                 {/* Priority indicator */}
-                                <span
+                                {/* <span
                                     className="px-2 py-1 text-xs font-medium rounded-full text-white"
                                     style={{ backgroundColor: getPriorityColor(todo.priority || 'medium') }}
                                 >
                                     {(todo.priority || 'medium').toUpperCase()}
-                                </span>
+                                </span> */}
 
                                 {/* Due date indicator */}
                                 {todo.dueDate && (
@@ -217,10 +249,10 @@ function SortableTodoItem({
                     </div>
 
                     {/* Todo metadata */}
-                    <div className="text-xs text-gray-400" style={{ marginLeft: '2rem' }}>
+                    {/* <div className="text-xs text-gray-400" style={{ marginLeft: '2rem' }}>
                         Created: {todo.createdAt.toLocaleDateString()} ·
                         Updated: {todo.updatedAt.toLocaleDateString()}
-                    </div>
+                    </div> */}
                 </div>
             </div>
 
@@ -502,6 +534,62 @@ export default function TodoListPage() {
             deleteTodoList(listId);
             router.push('/todos');
         }
+    };
+
+    const handleExpandAll = () => {
+        // Find all todos that have children and are currently collapsed
+        currentList.todos.forEach(todo => {
+            const hasChildren = currentList.todos.some(t => t.parentId === todo.id);
+            if (hasChildren && todo.isCollapsed) {
+                toggleCollapse(listId, todo.id);
+            }
+        });
+    };
+
+    const handleCollapseAll = () => {
+        // Find all todos that have children and are currently expanded
+        currentList.todos.forEach(todo => {
+            const hasChildren = currentList.todos.some(t => t.parentId === todo.id);
+            if (hasChildren && !todo.isCollapsed) {
+                toggleCollapse(listId, todo.id);
+            }
+        });
+    };
+
+    const handleToggleExpandCollapse = () => {
+        // Check if there are any collapsed todos with children
+        const hasCollapsedParents = currentList.todos.some(todo => {
+            const hasChildren = currentList.todos.some(t => t.parentId === todo.id);
+            return hasChildren && todo.isCollapsed;
+        });
+
+        if (hasCollapsedParents) {
+            // If there are collapsed parents, expand all
+            currentList.todos.forEach(todo => {
+                const hasChildren = currentList.todos.some(t => t.parentId === todo.id);
+                if (hasChildren && todo.isCollapsed) {
+                    toggleCollapse(listId, todo.id);
+                }
+            });
+        } else {
+            // If all are expanded (or no parents exist), collapse all
+            currentList.todos.forEach(todo => {
+                const hasChildren = currentList.todos.some(t => t.parentId === todo.id);
+                if (hasChildren && !todo.isCollapsed) {
+                    toggleCollapse(listId, todo.id);
+                }
+            });
+        }
+    };
+
+    // Determine button text based on current state
+    const getExpandCollapseButtonText = () => {
+        const hasCollapsedParents = currentList.todos.some(todo => {
+            const hasChildren = currentList.todos.some(t => t.parentId === todo.id);
+            return hasChildren && todo.isCollapsed;
+        });
+
+        return hasCollapsedParents ? '▼ Expand All' : '▶ Collapse All';
     };
 
     // Handle drag start
@@ -1056,6 +1144,14 @@ export default function TodoListPage() {
                                 placeholder="Search todos..."
                                 className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent min-w-[200px]"
                             />
+
+                            <button
+                                onClick={handleToggleExpandCollapse}
+                                className="px-2 py-1 text-xs bg-gray-100 text-gray-700 rounded hover:bg-gray-200 transition-colors ml-2"
+                                title="Toggle expand/collapse all todos with sub-tasks"
+                            >
+                                {getExpandCollapseButtonText()}
+                            </button>
                         </div>
 
                         <button

@@ -853,6 +853,13 @@ export default function Home() {
           >
             <span className="emoji">🎮</span> Games Hub
           </Link>
+          <Link
+            href="/api-playground"
+            onClick={handleButtonClick}
+            className="app-button relative overflow-hidden rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-orange-600 text-white gap-1 hover:bg-orange-700 font-medium text-xs sm:text-sm h-9 sm:h-10 px-3 sm:px-4 whitespace-nowrap shadow-lg hover:shadow-xl"
+          >
+            <span className="emoji">🔧</span> API Playground
+          </Link>
         </div>
       </main>
       <footer ref={footerRef} className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
